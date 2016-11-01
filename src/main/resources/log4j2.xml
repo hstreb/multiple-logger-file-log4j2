@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration>
+    <Appenders>
+        <Console name="Console-Appender" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+            </PatternLayout>
+        </Console>
+        <RollingFile name="File-Appender" fileName="logs/application.log"
+                     filePattern="logs/$${date:yyyy-MM}/application-%d{MM-dd-yyyy}-%i.log.gz"
+                     ignoreExceptions="false">
+            <PatternLayout>
+                <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="250MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+        <Routing name="Routing-Append">
+            <Routes pattern="$${ctx:FILENAME}">
+                <Route key="$${ctx:FILENAME}">
+                    <RollingFile name="Rolling-${ctx:FILENAME}" fileName="logs/default.log"
+                                 filePattern="logs/${date:yyyy-MM}/default-%d{yyyy-MM-dd}-%i.log.gz">
+                        <PatternLayout>
+                            <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+                        </PatternLayout>
+                        <Policies>
+                            <TimeBasedTriggeringPolicy />
+                            <SizeBasedTriggeringPolicy size="250MB"/>
+                        </Policies>
+                        <DefaultRolloverStrategy max="10"/>
+                    </RollingFile>
+                </Route>
+                <Route>
+                    <File name="File-${ctx:FILENAME}" fileName="logs/application-${ctx:FILENAME}.log"
+                          ignoreExceptions="false">
+                        <PatternLayout>
+                            <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+                        </PatternLayout>
+                    </File>
+                </Route>
+            </Routes>
+        </Routing>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console-Appender"/>
+            <AppenderRef ref="File-Appender"/>
+            <AppenderRef ref="Routing-Append"/>
+        </Root>
+    </Loggers>
+</Configuration>

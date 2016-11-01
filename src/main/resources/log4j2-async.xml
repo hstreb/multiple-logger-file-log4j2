@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration>
+    <Appenders>
+        <Console name="Console-Appender" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+            </PatternLayout>
+        </Console>
+        <RollingRandomAccessFile name="RandomAccessFile" fileName="logs/application.log"
+                                 filePattern="logs/$${date:yyyy-MM}/application-%d{MM-dd-yyyy}-%i.log.gz"
+                                 immediateFlush="false" append="false" ignoreExceptions="false">
+            <PatternLayout>
+                <Pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="250MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingRandomAccessFile>
+        <Routing name="Routing">
+            <Routes pattern="$${ctx:FILENAME}">
+                <Route key="$${ctx:FILENAME}">
+                    <RollingRandomAccessFile name="Rolling-${ctx:FILENAME}" fileName="logs/default.log"
+                                      immediateFlush="false" append="false">
+                        <PatternLayout>
+                            <Pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</Pattern>
+                        </PatternLayout>
+                        <Policies>
+                            <TimeBasedTriggeringPolicy />
+                            <SizeBasedTriggeringPolicy size="250MB"/>
+                        </Policies>
+                        <DefaultRolloverStrategy max="10"/>
+                    </RollingRandomAccessFile>
+                </Route>
+                <Route>
+                    <RandomAccessFile name="Rolling-${ctx:FILENAME}" fileName="logs/application-${ctx:FILENAME}.log"
+                                      immediateFlush="false" append="false">
+                        <PatternLayout>
+                            <Pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</Pattern>
+                        </PatternLayout>
+                    </RandomAccessFile>
+                </Route>
+            </Routes>
+        </Routing>
+    </Appenders>
+    <Loggers>
+        <AsyncLogger name="com.hstreb" level="info" includeLocation="true">
+            <AppenderRef ref="RandomAccessFile"/>
+            <AppenderRef ref="Routing" level="info"/>
+        </AsyncLogger>
+        <Root level="info" includeLocation="true">
+            <AppenderRef ref="Console-Appender" level="info"/>
+        </Root>
+    </Loggers>
+</Configuration>
