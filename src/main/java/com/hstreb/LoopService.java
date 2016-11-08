@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.stream.IntStream;
 
+import org.hstreb.Formatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -15,6 +16,7 @@ public class LoopService {
     public void run(String name) throws InterruptedException {
         MDC.put("FILENAME", name);
         Instant start = Instant.now();
+        Formatter formatter = new Formatter();
         logger.info("start process {}", name);
         IntStream.range(0, 1000000)
                 .filter(i -> i%1000 == 0)
@@ -25,6 +27,9 @@ public class LoopService {
                         e.printStackTrace();
                     }
                     logger.info("in process [{}] {}", i, name);
+                    if (i%5000==0) {
+                        logger.trace(formatter.format(name));
+                    }
                 });
         Instant end = Instant.now();
         logger.info("end process {} in {}ms", name, Duration.between(start, end).toMillis());

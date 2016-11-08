@@ -1,55 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <Configuration>
+    <Properties>
+        <Property name="logPath">logs</Property>
+        <Property name="auditorPattern">%d{ISO8601} [%15.15t] %5p %-40.40c{39.1} [%X{FILENAME}] %m%n</Property>
+    </Properties>
     <Appenders>
-        <Console name="Console-Appender" target="SYSTEM_OUT">
+        <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout>
-                <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+                <pattern>${auditorPattern}</pattern>
             </PatternLayout>
         </Console>
-        <RollingFile name="File-Appender" fileName="logs/application.log"
-                     filePattern="logs/$${date:yyyy-MM}/application-%d{MM-dd-yyyy}-%i.log.gz"
-                     ignoreExceptions="false">
+        <RollingRandomAccessFile name="RandomAccessFile" fileName="${logPath}/application.log"
+                                 filePattern="${logPath}/$${date:yyyy-MM}/application-%d{MM-dd-yyyy}-%i.log.gz"
+                                 immediateFlush="false" append="false" ignoreExceptions="false">
             <PatternLayout>
-                <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+                <Pattern>${auditorPattern}</Pattern>
             </PatternLayout>
             <Policies>
                 <TimeBasedTriggeringPolicy />
                 <SizeBasedTriggeringPolicy size="250MB"/>
             </Policies>
             <DefaultRolloverStrategy max="10"/>
-        </RollingFile>
-        <Routing name="Routing-Append">
+        </RollingRandomAccessFile>
+        <Routing name="Routing">
             <Routes pattern="$${ctx:FILENAME}">
                 <Route key="$${ctx:FILENAME}">
-                    <RollingFile name="Rolling-${ctx:FILENAME}" fileName="logs/default.log"
-                                 filePattern="logs/${date:yyyy-MM}/default-%d{yyyy-MM-dd}-%i.log.gz">
+                    <RollingRandomAccessFile name="Rolling-$${ctx:FILENAME}" fileName="${logPath}/default.log"
+                                             immediateFlush="false" append="false">
                         <PatternLayout>
-                            <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+                            <pattern>${auditorPattern}</pattern>
                         </PatternLayout>
                         <Policies>
                             <TimeBasedTriggeringPolicy />
                             <SizeBasedTriggeringPolicy size="250MB"/>
                         </Policies>
                         <DefaultRolloverStrategy max="10"/>
-                    </RollingFile>
+                    </RollingRandomAccessFile>
                 </Route>
                 <Route>
-                    <File name="File-${ctx:FILENAME}" fileName="logs/application-${ctx:FILENAME}.log"
-                          ignoreExceptions="false">
+                    <RandomAccessFile name="Rolling-${ctx:FILENAME}" fileName="${logPath}/${ctx:FILENAME}.log"
+                                      immediateFlush="false" append="false">
                         <PatternLayout>
-                            <pattern>%d [%t] %p %c{3} - [%X{FILENAME}] %m%n</pattern>
+                            <Pattern>[%d] %m%n</Pattern>
                         </PatternLayout>
-                    </File>
+                    </RandomAccessFile>
                 </Route>
             </Routes>
+            <IdlePurgePolicy timeToLive="15" timeUnit="minutes"/>
         </Routing>
     </Appenders>
     <Loggers>
-        <Root level="info">
-            <AppenderRef ref="Console-Appender"/>
-            <AppenderRef ref="File-Appender"/>
-            <AppenderRef ref="Routing-Append"/>
+        <AsyncLogger name="com.hstreb" level="trace" includeLocation="true" additivity="false">
+            <AppenderRef ref="RandomAccessFile"/>
+            <AppenderRef ref="Routing"/>
+        </AsyncLogger>
+        <AsyncLogger name="org.hstreb" level="info" includeLocation="true" additivity="false">
+            <AppenderRef ref="RandomAccessFile"/>
+            <AppenderRef ref="Routing"/>
+        </AsyncLogger>
+        <Root level="info" includeLocation="true">
+            <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
 </Configuration>

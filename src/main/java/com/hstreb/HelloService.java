@@ -22,5 +22,6 @@ public class HelloService {
         });
         t.start();
         logger.info("service process ended: {}", name);
+        MDC.remove("FILENAME");
     }
 }
